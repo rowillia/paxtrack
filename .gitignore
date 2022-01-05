@@ -31,3 +31,7 @@ yarn-error.log*
 
 # Local Netlify folder
 .netlify
+
+.cache
+__pycache__
+.vscode
