@@ -35,3 +35,4 @@ yarn-error.log*
 .cache
 __pycache__
 .vscode
+.ipynb_checkpoints/

@@ -12,7 +12,7 @@ from pydantic.main import BaseModel
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GOOGLE_GEOCODE_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
-CACHE_FILE = Path(".cache")
+CACHE_FILE = Path(".cache", 'geocoder.json')
 
 
 class Location(BaseModel):
@@ -66,4 +66,5 @@ def Geocoder(client: httpx.AsyncClient) -> Iterator[CachingGeocoder]:
     if CACHE_FILE.exists():
         saved_cache = json.loads(CACHE_FILE.read_text())
     yield CachingGeocoder(client, saved_cache)
+    CACHE_FILE.parents[0].mkdir(parents=True, exist_ok=True)
     CACHE_FILE.write_text(json.dumps(saved_cache))
