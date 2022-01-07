@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import List
 
 import jinja2
-6
 import analysis
 from models import TheraputicLocations, load_updates
 
