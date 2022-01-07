@@ -1,0 +1,79 @@
+{% macro data_table(title, records) %}
+  <h1>{{ title }}</h1>
+  <table>
+  <tr>
+    <th>Treatment</th>
+    <th>Count</th>
+  </tr>
+  {% for data_date, treatments in records.items() %}
+  {% if loop.last %}
+  {% for name, courses in treatments.items() %}
+    <tr>
+      <td>{{ name }}</td>
+      <td>{{ courses }}</td>
+    </tr>
+  {% endfor %}
+  {% endif %}
+  {% endfor %}
+  </table>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Antiviral Tracker - {{ " / ".join(path) }} </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <style type="text/css">
+      .container {
+        max-width: 500px;
+        padding-top: 100px;
+      }
+    </style>
+  </head>
+  <body>
+    <title>Antiviral Tracker - {{ " / ".join(path) }}</title>
+    <div class="container">
+      {{ data_table('Courses Received', total_courses) }}
+      {{ data_table('Courses Available', courses_available) }}
+      {{ data_table('Courses Delivered', courses_delivered) }}
+      
+      {% if treatments %}
+      <h1>Available Treatments</h1>
+      {% for place_id, treatments in treatments.items() %}
+      {% set provider = providers[place_id] %}
+      <h3><a href="https://www.google.com/maps/place/?q=place_id:{{ place_id }}">{{ provider['provider_name'] }}</a></h3>
+      <div>{{ provider['city'] }}, {{ provider['state_code'] }}</div>
+      <table>
+        <tr>
+          <th>Treatment</th>
+          <th>Courses</th>
+        </tr>
+        {% for name, courses in treatments.items() %}
+        <tr>
+          <td>{{ name }}</td>
+          <td>{{ courses }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% endfor %}
+      {% endif %}
+      
+      {% if children %}
+      {% if not path %}
+      <h1>States</h1>
+      {% else %}
+      <h1>Counties</h1>
+      {% endif %}
+      <ul id="navigation">
+        {% for item in children %}
+            <li><a href="{{ item }}/index.html">{{ item }}</a></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+
+    </div>
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+  </body>
+</html>
