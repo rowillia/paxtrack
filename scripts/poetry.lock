@@ -418,7 +418,7 @@ testing = ["Django (<3.1)", "colorama", "docopt", "pytest (<7.0.0)"]
 name = "jinja2"
 version = "3.0.3"
 description = "A very fast and expressive template engine."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -535,7 +535,7 @@ python-versions = ">=3.6"
 name = "markupsafe"
 version = "2.0.1"
 description = "Safely add untrusted strings to HTML/XML markup."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -1146,7 +1146,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">3.8"
-content-hash = "37822f397f4591ed42d49ac798788c7953ec377cc576005db1d7b9306fad5dcf"
+content-hash = "c2fed1b361b44bc82a8fb46db8cc9593f899e3be2bfe537923288f6313107127"
 
 [metadata.files]
 anyio = [

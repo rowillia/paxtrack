@@ -18,12 +18,12 @@ MAX_LOCATIONS = 10
 class SummaryData(BaseModel):
     path: List[str]
     children: Dict[str, SummaryData]
-    total_coures: Dict[str, Dict[str, int]]
+    total_courses: Dict[str, Dict[str, int]]
     courses_delivered: Dict[str, Dict[str, int]]
     courses_available: Dict[str, Dict[str, int]]
     locations: List[TheraputicLocation] | None
 
-    @validator("total_coures", "courses_delivered", "courses_available", pre=True)
+    @validator("total_courses", "courses_delivered", "courses_available", pre=True)
     def from_dataframe(cls, series: pd.Series) -> Dict[str, Dict[str, int]]:
         result = {}
         for k, v in series.to_dict().items():
@@ -34,20 +34,9 @@ class SummaryData(BaseModel):
 def courses_delivered(row: TheraputicLocation) -> int:
     if row.total_courses is None:
         return None
-    return max(0, row.total_courses - (row.courses_available or 0))
-
-
-def days_available(row: TheraputicLocation) -> int:
-    if row.courses_available_date is None:
-        return None
-    deliver_date = row.last_delivered_date or row.last_order_date
-    return (row.courses_available_date - deliver_date).days
-
-
-def courses_per_day(row: TheraputicLocation) -> int:
-    if row.courses_delivered is None or not row.days_available:
-        return None
-    return row.courses_delivered / row.days_available
+    if row.courses_available is None:
+        return 0
+    return max(0, row.total_courses - row.courses_available)
 
 
 def build_dataframe(locations: List[TheraputicLocations]) -> pd.DataFrame:
@@ -60,8 +49,6 @@ def build_dataframe(locations: List[TheraputicLocations]) -> pd.DataFrame:
     df = pd.concat(updates)
 
     df["courses_delivered"] = df.apply(courses_delivered, axis=1)
-    df["days_available"] = df.apply(days_available, axis=1)
-    df["courses_per_day"] = df.apply(courses_per_day, axis=1)
 
     return df
 
@@ -77,7 +64,7 @@ def to_summary_data(
     locations = None
     latest_date = df["update_date"].max()
     locs = (
-        df.query("update_date == @latest_date")
+        df.query("update_date == @latest_date and courses_available")
         .fillna(value=np.nan)
         .replace({np.nan: None})
         .to_dict("index")
@@ -92,7 +79,7 @@ def to_summary_data(
             children[child] = to_summary_data(df[df[next_dimension] == child], remaining_dimensions, path + [child])
     return SummaryData(
         path=path,
-        total_coures=total_courses,
+        total_courses=total_courses,
         courses_delivered=courses_delivered,
         courses_available=courses_available,
         children=children,
