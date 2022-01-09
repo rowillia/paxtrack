@@ -65,11 +65,22 @@
       {% else %}
       <h1>Counties</h1>
       {% endif %}
-      <ul id="navigation">
-        {% for item in children %}
-            <li><a href="{{ item }}/index.html">{{ item }}</a></li>
+      <table>
+        <tr>
+          <th>Name</th>
+          {% for item in child_treatments %}
+          <th>{{ item }} Available</th>
+          {% endfor %}
+        </tr>
+        {% for name, courses in children.items() %}
+        <tr>
+          <td><a href="{{ name }}/index.html">{{ name }}</a></td>
+          {% for child_treatments in child_treatments %}
+              <td>{{ courses.get(child_treatments, 0) }}</td>
+          {% endfor %}
+        </tr>
         {% endfor %}
-      </ul>
+      </table>
       {% endif %}
 
     </div>

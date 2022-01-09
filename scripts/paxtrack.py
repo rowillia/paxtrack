@@ -1,5 +1,6 @@
 import asyncio
 from collections import defaultdict
+from itertools import chain
 import json
 from pathlib import Path
 from typing import List
@@ -22,7 +23,8 @@ async def write_date(locations: List[TheraputicLocations], dest: Path) -> None:
     while queue:
         next_item = queue.pop()
         output = json.loads(next_item.json(exclude={'children', 'locations'}))
-        output['children'] = list(next_item.children.keys())
+        output['children'] = {k: child_courses[-1] for k in sorted(next_item.children.keys()) if (child_courses := list(next_item.children[k].courses_available.values()))}
+        output['child_treatments'] = sorted(set(chain.from_iterable(x.keys() for x in output['children'].values())))
         if next_item.locations:
             providers = {x.place_id: x.dict(include={'provider_name', 'address1', 'address2', 'state_code', 'city', 'zip_code', 'county', 'lat', 'lng', 'place_id', 'order_label'}) for x in next_item.locations}
             treatments = defaultdict(dict)
