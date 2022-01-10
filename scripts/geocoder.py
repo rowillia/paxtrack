@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 import json
 import os
 import urllib.parse
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ContextManager, Dict, Iterator, Tuple, TypeAlias
+from typing import Dict, Iterator
 
 import httpx
 from pydantic.main import BaseModel
@@ -12,7 +14,7 @@ from pydantic.main import BaseModel
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GOOGLE_GEOCODE_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
-CACHE_FILE = Path(".cache", 'geocoder.json')
+CACHE_FILE = Path(".cache", "geocoder.json")
 
 
 class Location(BaseModel):
@@ -34,6 +36,8 @@ class CachingGeocoder:
         state_code: str,
         zip_code: str,
     ) -> Location | None:
+        if not GOOGLE_API_KEY:
+            return None
         params = (
             (
                 "address",

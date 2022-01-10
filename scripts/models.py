@@ -2,23 +2,27 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 from collections import defaultdict
 from csv import DictReader
 from datetime import datetime, date
 from io import StringIO
 from pathlib import Path
 from operator import attrgetter
-from typing import Dict, List
+from typing import Any, Dict, List, Tuple
 
 import httpx
 from pandas._libs.tslibs.timestamps import Timestamp
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 from pydantic.fields import Field
 
-from geocoder import CachingGeocoder, Geocoder, Location
+from geocoder import CachingGeocoder, Geocoder
 
 ARCHIVE_URL = os.getenv("ARCHIVE_URL", "https://healthdata.gov/resource/j7fh-jg79.json")
 CACHE_DIR = Path(".cache")
+GEOCODE_ADDRESS_RE = re.compile(r"POINT\s+\((-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)")
+MIN_DATE = date(2022, 1, 5)
+
 
 def to_word(string: str) -> str:
     return " ".join(word.capitalize() for word in string.split("_"))
@@ -26,6 +30,10 @@ def to_word(string: str) -> str:
 
 class Link(BaseModel):
     url: str
+
+
+address_to_location_id: Dict[Tuple[str, str, str | None, str], int] = {}
+next_id = 0
 
 
 class TheraputicLocation(BaseModel):
@@ -38,7 +46,6 @@ class TheraputicLocation(BaseModel):
     zip_code: str = Field(alias="Zip")
     lat: float | None
     lng: float | None
-    place_id: str | None
     national_drug_code: str
     order_label: str
     last_order_date: datetime | None
@@ -47,23 +54,38 @@ class TheraputicLocation(BaseModel):
     courses_available: int | None
     courses_available_date: datetime | None
 
+    @property
+    def location_id(self) -> int:
+        global next_id
+        key = (self.provider_name, self.address1, self.address2, self.zip_code)
+        if key not in address_to_location_id:
+            address_to_location_id[key] = next_id
+            next_id += 1
+        return address_to_location_id[key]
+
+    @root_validator(pre=True)
+    def parse_point(cls, values: Dict[str, Any]) -> None:
+        if match := GEOCODE_ADDRESS_RE.match(values.get("Geocoded Address", "")):
+            lng, lat = (float(x) for x in match.groups())
+            values["lat"] = lat
+            values["lng"] = lng
+        return values
+
     async def geocode(self, geocoder: CachingGeocoder) -> None:
-        location = await geocoder.get_location(
-            address1=self.address1,
-            address2=self.address2,
-            city=self.city,
-            state_code=self.state_code,
-            zip_code=self.zip_code,
-        )
-        if location:
-            self.lat = location.lat
-            self.lng = location.lng
-            self.place_id = location.place_id
-        if not location:
-            print(self)
+        if self.lat is None or self.lng is None:
+            location = await geocoder.get_location(
+                address1=self.address1,
+                address2=self.address2,
+                city=self.city,
+                state_code=self.state_code,
+                zip_code=self.zip_code,
+            )
+            if location:
+                self.lat = location.lat
+                self.lng = location.lng
 
     @validator("*", pre=True)
-    def empty_str_to_none(cls, v):
+    def empty_str_to_none(cls, v: str) -> str | None:
         if v == "":
             return None
         return v
@@ -96,7 +118,7 @@ class TheraputicLocations(BaseModel):
     update_time: datetime
     locations: List[TheraputicLocation]
 
-    async def geocode(self, geocoder: CachingGeocoder, batch_size: int = 10):
+    async def geocode(self, geocoder: CachingGeocoder, batch_size: int = 10) -> None:
         for i in range(0, len(self.locations), batch_size):
             await asyncio.gather(
                 *[
@@ -119,7 +141,9 @@ class ArchiveUpdate(BaseModel):
     column_level_metadata_updates: str
     archive_link: Link
 
-    async def theraputic_locations(self, client: httpx.AsyncClient):
+    async def theraputic_locations(
+        self, client: httpx.AsyncClient
+    ) -> TheraputicLocations:
         locations = list(
             DictReader(StringIO((await client.get(self.archive_link.url)).text))
         )
@@ -145,6 +169,8 @@ async def load_updates() -> List[TheraputicLocations]:
             archive = await Archive.fetch(client)
             CACHE_DIR.mkdir(parents=True, exist_ok=True)
             for update in archive.updates:
+                if update.update_date.date() < MIN_DATE:
+                    continue
                 cached_update = CACHE_DIR / update.path
                 if not cached_update.exists():
                     locations = await update.theraputic_locations(client)

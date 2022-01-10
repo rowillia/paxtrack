@@ -1,8 +1,9 @@
 from __future__ import annotations
+from datetime import datetime
 
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -25,13 +26,14 @@ class SummaryData(BaseModel):
 
     @validator("total_courses", "courses_delivered", "courses_available", pre=True)
     def from_dataframe(cls, series: pd.Series) -> Dict[str, Dict[str, int]]:
-        result = {}
-        for k, v in series.to_dict().items():
+        result: Dict[str, Dict[str, int]] = {}
+        grouped: Dict[Tuple[datetime, str], int] = series.to_dict()  # type: ignore
+        for k, v in grouped.items():
             result.setdefault(k[0].strftime("%Y/%m/%d"), {})[k[1]] = v
         return result
 
 
-def courses_delivered(row: TheraputicLocation) -> int:
+def courses_delivered(row: TheraputicLocation) -> int | None:
     if row.total_courses is None:
         return None
     if row.courses_available is None:
@@ -63,8 +65,8 @@ def to_summary_data(
     courses_available = grouped["courses_available"].sum()
     locations = None
     latest_date = df["update_date"].max()
-    locs = (
-        df.query("update_date == @latest_date and courses_available")
+    locs: Dict[str, Dict] = (
+        df.query("update_date == @latest_date and courses_available")  # type: ignore
         .fillna(value=np.nan)
         .replace({np.nan: None})
         .to_dict("index")
@@ -74,9 +76,11 @@ def to_summary_data(
     children = {}
     if dimensions:
         next_dimension, *remaining_dimensions = dimensions
-        for child in  list(set(df[next_dimension])):
+        for child in list(set(df[next_dimension])):
             child = child or "UNKNOWN"
-            children[child] = to_summary_data(df[df[next_dimension] == child], remaining_dimensions, path + [child])
+            children[child] = to_summary_data(
+                df[df[next_dimension] == child], remaining_dimensions, path + [child]
+            )
     return SummaryData(
         path=path,
         total_courses=total_courses,

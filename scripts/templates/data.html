@@ -1,6 +1,6 @@
 {% macro data_table(title, records) %}
-  <h1>{{ title }}</h1>
-  <table>
+<h1>{{ title }}</h1>
+<table>
   <tr>
     <th>Treatment</th>
     <th>Count</th>
@@ -8,83 +8,87 @@
   {% for data_date, treatments in records.items() %}
   {% if loop.last %}
   {% for name, courses in treatments.items() %}
-    <tr>
-      <td>{{ name }}</td>
-      <td>{{ courses }}</td>
-    </tr>
+  <tr>
+    <td>{{ name }}</td>
+    <td>{{ courses }}</td>
+  </tr>
   {% endfor %}
   {% endif %}
   {% endfor %}
-  </table>
+</table>
 {% endmacro %}
 
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Antiviral Tracker - {{ " / ".join(path) }} </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
-    <style type="text/css">
-      .container {
-        max-width: 500px;
-        padding-top: 100px;
-      }
-    </style>
-  </head>
-  <body>
-    <title>Antiviral Tracker - {{ " / ".join(path) }}</title>
-    <div class="container">
-      {{ data_table('Courses Received', total_courses) }}
-      {{ data_table('Courses Available', courses_available) }}
-      {{ data_table('Courses Delivered', courses_delivered) }}
-      
-      {% if treatments %}
-      <h1>Available Treatments</h1>
-      {% for place_id, treatments in treatments.items() %}
-      {% set provider = providers[place_id] %}
-      <h3><a href="https://www.google.com/maps/place/?q=place_id:{{ place_id }}">{{ provider['provider_name'] }}</a></h3>
-      <div>{{ provider['city'] }}, {{ provider['state_code'] }}</div>
-      <table>
-        <tr>
-          <th>Treatment</th>
-          <th>Courses</th>
-        </tr>
-        {% for name, courses in treatments.items() %}
-        <tr>
-          <td>{{ name }}</td>
-          <td>{{ courses }}</td>
-        </tr>
-        {% endfor %}
-      </table>
-      {% endfor %}
-      {% endif %}
-      
-      {% if children %}
-      {% if not path %}
-      <h1>States</h1>
-      {% else %}
-      <h1>Counties</h1>
-      {% endif %}
-      <table>
-        <tr>
-          <th>Name</th>
-          {% for item in child_treatments %}
-          <th>{{ item }} Available</th>
-          {% endfor %}
-        </tr>
-        {% for name, courses in children.items() %}
-        <tr>
-          <td><a href="{{ name }}/index.html">{{ name }}</a></td>
-          {% for child_treatments in child_treatments %}
-              <td>{{ courses.get(child_treatments, 0) }}</td>
-          {% endfor %}
-        </tr>
-        {% endfor %}
-      </table>
-      {% endif %}
 
-    </div>
-    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
-  </body>
+<head>
+  <title>Antiviral Tracker - {{ " / ".join(path) }} </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  <style type="text/css">
+    .container {
+      max-width: 500px;
+      padding-top: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <title>Antiviral Tracker - {{ " / ".join(path) }}</title>
+  <div class="container">
+    {{ data_table('Courses Received', total_courses) }}
+    {{ data_table('Courses Available', courses_available) }}
+    {{ data_table('Courses Delivered', courses_delivered) }}
+
+    {% if treatments %}
+    <h1>Available Treatments</h1>
+    {% for location_id, treatments in treatments.items() %}
+    {% set provider = providers[location_id] %}
+    <h3><a href="https://www.google.com/maps/search/?api=1&query={{ provider.lat }},{{ provider.lng }}">{{
+        provider['provider_name'] }}</a></h3>
+    <div>{{ provider['city'] }}, {{ provider['state_code'] }}</div>
+    <table>
+      <tr>
+        <th>Treatment</th>
+        <th>Courses</th>
+      </tr>
+      {% for name, courses in treatments.items() %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ courses }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endfor %}
+    {% endif %}
+
+    {% if children %}
+    {% if not path %}
+    <h1>States</h1>
+    {% else %}
+    <h1>Counties</h1>
+    {% endif %}
+    <table>
+      <tr>
+        <th>Name</th>
+        {% for item in child_treatments %}
+        <th>{{ item }} Available</th>
+        {% endfor %}
+      </tr>
+      {% for name, courses in children.items() %}
+      <tr>
+        <td><a href="{{ name }}/index.html">{{ name }}</a></td>
+        {% for child_treatments in child_treatments %}
+        <td>{{ courses.get(child_treatments, 0) }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+
+  </div>
+  <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+  <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+</body>
+
 </html>
