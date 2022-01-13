@@ -36,3 +36,4 @@ yarn-error.log*
 __pycache__
 .vscode
 .ipynb_checkpoints/
+.tool-versions
