@@ -10,17 +10,36 @@ from typing import Dict, Iterator
 
 import httpx
 from pydantic.main import BaseModel
-
+import geojson
+import random
+import string
+from icecream import ic
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 GOOGLE_GEOCODE_BASE_URL = "https://maps.googleapis.com/maps/api/geocode/json"
 CACHE_FILE = Path(".cache", "geocoder.json")
 
 
+ALPHABET = string.ascii_lowercase + string.digits
+
+
+def random_id() -> str:
+    return "".join(random.choices(ALPHABET, k=8))
+
+
 class Location(BaseModel):
     lat: float
     lng: float
     place_id: str
+
+    @classmethod
+    def get_random(cls) -> Location:
+        rand_point = geojson.utils.generate_random("Point")
+        return Location(
+            lat=rand_point.coordinates[0],
+            lng=rand_point.coordinates[1],
+            place_id=f"random_{random_id()}",
+        )
 
 
 @dataclass
@@ -37,7 +56,8 @@ class CachingGeocoder:
         zip_code: str,
     ) -> Location | None:
         if not GOOGLE_API_KEY:
-            return None
+            return Location.get_random()
+
         params = (
             (
                 "address",
