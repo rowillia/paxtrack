@@ -12,6 +12,7 @@ from operator import attrgetter
 from typing import Any, Dict, List, Tuple
 
 import httpx
+import tqdm
 from pandas._libs.tslibs.timestamps import Timestamp
 from pydantic import BaseModel, validator, root_validator
 from pydantic.fields import Field
@@ -119,7 +120,7 @@ class TheraputicLocations(BaseModel):
     locations: List[TheraputicLocation]
 
     async def geocode(self, geocoder: CachingGeocoder, batch_size: int = 10) -> None:
-        for i in range(0, len(self.locations), batch_size):
+        for i in tqdm.trange(0, len(self.locations), batch_size, desc="Geocoder"):
             await asyncio.gather(
                 *[
                     location.geocode(geocoder)

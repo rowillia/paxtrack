@@ -2,7 +2,6 @@ from __future__ import annotations
 from datetime import datetime
 
 
-from pathlib import Path
 from typing import Dict, List, Tuple
 
 import numpy as np
@@ -64,7 +63,7 @@ def to_summary_data(
     courses_delivered = grouped["courses_delivered"].sum()
     courses_available = grouped["courses_available"].sum()
     locations = None
-    latest_date = df["update_date"].max()
+    latest_date = df["update_date"].max()  # noqa: F841
     locs: Dict[str, Dict] = (
         df.query("update_date == @latest_date and courses_available")  # type: ignore
         .fillna(value=np.nan)
