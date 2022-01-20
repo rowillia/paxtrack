@@ -3,7 +3,7 @@ from collections import defaultdict
 from itertools import chain
 import json
 from pathlib import Path
-from typing import DefaultDict, Dict, List
+from typing import Any, DefaultDict, Dict, List, Set
 
 import jinja2
 import analysis
@@ -14,12 +14,24 @@ loader = jinja2.FileSystemLoader(searchpath="./templates")
 temoplate_env = jinja2.Environment(loader=loader)
 template = temoplate_env.get_template("data.html")
 
+def data_vectors_js(vectors: List[Dict[str,Any]]) -> str:
+    names:Set[str] = set()
+    for m in vectors:
+        names |= set(m.keys())
+
+    columns = defaultdict(list)
+    for m in vectors:
+        for n in names:
+            columns[n].append(m.get(n))
+    return '\n'.join(f"const vector_{n} = {json.dumps(v)};" for n,v in columns.items())
+    
 
 async def write_date(locations: List[TheraputicLocations], dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     df = analysis.build_dataframe(await load_updates())
     data = analysis.to_summary_data(df, ["state_code", "county"])
     queue: List[analysis.SummaryData] = [data]
+    vectors: List[Dict[str,Any]] = []
     while queue:
         next_item = queue.pop()
         output = json.loads(next_item.json(exclude={"children", "locations"}))
@@ -54,6 +66,8 @@ async def write_date(locations: List[TheraputicLocations], dest: Path) -> None:
                 treatments[location.location_id][location.order_label] = (
                     location.courses_available or 0
                 )
+                if location.courses_available:
+                    vectors.append({'path': str(Path(*next_item.path)), **location.dict(include={"lat","lng","provider_name","location_id"})})
             output["providers"] = providers
             output["treatments"] = treatments
 
@@ -62,6 +76,7 @@ async def write_date(locations: List[TheraputicLocations], dest: Path) -> None:
         (output_path / "data.json").write_text(json.dumps(output))
         (output_path / "index.html").write_text(template.render(output))
         queue.extend(list(next_item.children.values()))
+    (dest / "data_vectors.js").write_text(data_vectors_js(vectors))
 
 
 async def main() -> None:
