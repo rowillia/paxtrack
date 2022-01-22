@@ -57,8 +57,10 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                             "county",
                             "lat",
                             "lng",
-                            "order_label",
                         }
+                    )
+                    treatments[location.location_id][location.order_label] = (
+                        location.courses_available or 0
                     )
                     geojson_features[location.location_id] = geojson.Feature(
                         geometry=geojson.Point(
@@ -67,11 +69,11 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                                 providers[location.location_id]["lat"],
                             ]
                         ),
-                        properties=providers[location.location_id],
+                        properties=(
+                            providers[location.location_id]
+                            | {"treatments": treatments[location.location_id]}
+                        ),
                         id=location.location_id,
-                    )
-                    treatments[location.location_id][location.order_label] = (
-                        location.courses_available or 0
                     )
                     output["providers"] = providers
                     output["treatments"] = treatments
@@ -86,7 +88,7 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                 pbar.reset(len(queue))
 
     ic("Writing geojson", len(geojson_features))
-    (dest / "data.geojson").write_text(
+    (dest / "geojson_data.json").write_text(
         geojson.dumps(
             geojson.FeatureCollection(list(geojson_features.values())), sort_keys=True
         )
