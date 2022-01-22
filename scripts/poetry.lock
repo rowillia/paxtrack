@@ -58,7 +58,7 @@ tests = ["pytest"]
 name = "asttokens"
 version = "2.0.5"
 description = "Annotate AST trees with source code positions"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -182,7 +182,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -238,7 +238,7 @@ python-versions = ">=2.7"
 name = "executing"
 version = "0.8.2"
 description = "Get the currently executing AST node of a frame, and other information"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -299,7 +299,7 @@ http2 = ["h2 (>=3,<5)"]
 name = "icecream"
 version = "2.1.1"
 description = "Never use print() to debug again; inspect variables, expressions, and program execution with a single, simple function call."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -873,7 +873,7 @@ email = ["email-validator (>=1.0.3)"]
 name = "pygments"
 version = "2.11.2"
 description = "Pygments is a syntax highlighting package written in Python."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.5"
 
@@ -1108,6 +1108,22 @@ optional = false
 python-versions = ">= 3.5"
 
 [[package]]
+name = "tqdm"
+version = "4.62.3"
+description = "Fast, Extensible Progress Meter"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
+telegram = ["requests"]
+
+[[package]]
 name = "traitlets"
 version = "5.1.1"
 description = "Traitlets Python configuration system"
@@ -1156,7 +1172,7 @@ notebook = ">=4.4.1"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10"
-content-hash = "54b17dcc7ad91665cddeb72a6529b2195345071e25e36ef2a1bc63d31fdb13ac"
+content-hash = "8930a3f919e9e6ca690d2cc1df598dd2521732f9afd4a3d791bb86f6bca230c9"
 
 [metadata.files]
 anyio = [
@@ -1879,6 +1895,10 @@ tornado = [
     {file = "tornado-6.1-cp39-cp39-win32.whl", hash = "sha256:d3d20ea5782ba63ed13bc2b8c291a053c8d807a8fa927d941bd718468f7b950c"},
     {file = "tornado-6.1-cp39-cp39-win_amd64.whl", hash = "sha256:548430be2740e327b3fe0201abe471f314741efcb0067ec4f2d7dcfb4825f3e4"},
     {file = "tornado-6.1.tar.gz", hash = "sha256:33c6e81d7bd55b468d2e793517c909b139960b6c790a60b7991b9b6b76fb9791"},
+]
+tqdm = [
+    {file = "tqdm-4.62.3-py2.py3-none-any.whl", hash = "sha256:8dd278a422499cd6b727e6ae4061c40b48fce8b76d1ccbf5d34fca9b7f925b0c"},
+    {file = "tqdm-4.62.3.tar.gz", hash = "sha256:d359de7217506c9851b7869f3708d8ee53ed70a1b8edbba4dbcb47442592920d"},
 ]
 traitlets = [
     {file = "traitlets-5.1.1-py3-none-any.whl", hash = "sha256:2d313cc50a42cd6c277e7d7dc8d4d7fedd06a2c215f78766ae7b1a66277e0033"},
