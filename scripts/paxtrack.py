@@ -3,7 +3,7 @@ from collections import defaultdict
 from itertools import chain
 import json
 from pathlib import Path
-from typing import DefaultDict, Dict, List
+from typing import Any, DefaultDict, Dict, List, Set
 
 import jinja2
 import geojson
@@ -18,6 +18,18 @@ temoplate_env = jinja2.Environment(loader=loader)
 template = temoplate_env.get_template("data.html")
 
 
+def data_vectors_js(vectors: List[Dict[str, Any]]) -> str:
+    names: Set[str] = set()
+    for m in vectors:
+        names |= set(m.keys())
+
+    columns = defaultdict(list)
+    for m in vectors:
+        for n in names:
+            columns[n].append(m.get(n))
+    return "\n".join(f"const vector_{n} = {json.dumps(v)};" for n, v in columns.items())
+
+
 async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
     dest.mkdir(parents=True, exist_ok=True)
     ic("Building data")
@@ -26,6 +38,8 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
     data = analysis.to_summary_data(df, ["state_code", "county"])
     geojson_features: Dict[int, geojson.Feature] = {}
     queue: List[analysis.SummaryData] = [data]
+    vectors: List[Dict[str, Any]] = []
+
     with tqdm.tqdm(total=1, desc="Writing json & html") as pbar:
         while queue:
             next_item = queue.pop()
@@ -57,9 +71,26 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                             "county",
                             "lat",
                             "lng",
-                            "order_label",
                         }
                     )
+                    treatments[location.location_id][location.order_label] = (
+                        location.courses_available or 0
+                    )
+                    if location.courses_available:
+                        vectors.append(
+                            {
+                                "path": str(Path(*next_item.path)),
+                                **location.dict(
+                                    include={
+                                        "lat",
+                                        "lng",
+                                        "provider_name",
+                                        "location_id",
+                                    }
+                                ),
+                            }
+                        )
+
                     geojson_features[location.location_id] = geojson.Feature(
                         geometry=geojson.Point(
                             [
@@ -67,11 +98,11 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                                 providers[location.location_id]["lat"],
                             ]
                         ),
-                        properties=providers[location.location_id],
+                        properties=(
+                            providers[location.location_id]
+                            | {"treatments": treatments[location.location_id]}
+                        ),
                         id=location.location_id,
-                    )
-                    treatments[location.location_id][location.order_label] = (
-                        location.courses_available or 0
                     )
                     output["providers"] = providers
                     output["treatments"] = treatments
@@ -86,11 +117,12 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
                 pbar.reset(len(queue))
 
     ic("Writing geojson", len(geojson_features))
-    (dest / "data.geojson").write_text(
+    (dest / "geojson_data.json").write_text(
         geojson.dumps(
             geojson.FeatureCollection(list(geojson_features.values())), sort_keys=True
         )
     )
+    (dest / "data_vectors.js").write_text(data_vectors_js(vectors))
 
 
 async def main() -> None:
