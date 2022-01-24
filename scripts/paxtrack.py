@@ -76,7 +76,7 @@ async def write_date(locations: List[TheraputicLocations], dest: Path) -> None:
         (output_path / "data.json").write_text(json.dumps(output))
         (output_path / "index.html").write_text(template.render(output))
         queue.extend(list(next_item.children.values()))
-    (dest / "data_vectors.js").write_text(data_vectors_js(vectors))
+    (dest / "data_vectors.json").write_text(data_vectors_js(vectors))
 
 
 async def main() -> None:
