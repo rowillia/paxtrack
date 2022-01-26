@@ -1,7 +1,7 @@
 import type { Feature, Geometry } from "geojson";
 import classnames from "classnames";
 
-type ProviderProperties = {
+export type ProviderProperties = {
   address1: string;
   address2: string | null;
   city: string;
@@ -30,9 +30,7 @@ const MiddotList = ({ children, className, ...rest }) => {
   );
 };
 
-export default ({ data }: { data: Feature<Geometry, ProviderProperties> }) => {
-  const { geometry, id, properties } = data;
-
+export default ({ properties }: { properties: ProviderProperties }) => {
   const treatments = (
     <ul className="list-none">
       {Object.entries(properties.treatments).map(([n, c]) => (
