@@ -2,22 +2,17 @@ import * as ReactLeaflet from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
-import { useFetch } from "react-async";
-import ReactDOMServer from "react-dom/server";
-import ProviderPopupContent from "./ProviderPopupContent";
-
+import { TileJSONMarkers } from "./geojson";
 import type { LatLngExpression } from "leaflet";
+
 const DEFAULT_CENTER: LatLngExpression = [38.907132, -77.036546];
 const DEFAULT_ZOOM = 15;
 
-const { MapContainer, TileLayer, GeoJSON, CircleMarker, useMapEvents } =
-  ReactLeaflet;
+const { MapContainer, TileLayer, CircleMarker, useMapEvent } = ReactLeaflet;
 
 const LocationMarker = () => {
   const [loc, setLoc] = useState(null);
-  useMapEvents({
-    locationfound: setLoc,
-  });
+  useMapEvent("locationfound", setLoc);
   return loc === null ? null : (
     <CircleMarker
       center={[loc.latlng.lat, loc.latlng.lng]}
@@ -40,27 +35,10 @@ const OSMBaseLayer = () => {
   );
 };
 
-const GeoJSONMarkers = ({ url }) => {
-  const { data } = useFetch(url, {}, { json: true });
-
-  const onEachFeature = (feature, layer) => {
-    layer.bindPopup(
-      ReactDOMServer.renderToString(<ProviderPopupContent data={feature} />)
-    );
-  };
-
-  // TODO: use isPending/error states
-  if (data) {
-    return <GeoJSON data={data} onEachFeature={onEachFeature} />;
-  } else {
-    return null;
-  }
-};
-
-const Map = ({
+function Map({
   children,
   ...rest
-}: React.ComponentProps<typeof MapContainer>) => {
+}: React.ComponentProps<typeof MapContainer>): JSX.Element {
   useEffect(() => {
     delete L.Icon.Default.prototype._getIconUrl;
     L.Icon.Default.mergeOptions({
@@ -87,10 +65,10 @@ const Map = ({
     >
       <OSMBaseLayer />
       <LocationMarker />
-      <GeoJSONMarkers url="/data/geojson_data.json" />
+      <TileJSONMarkers url="/data/geojson_data.json" />
       {children}
     </MapContainer>
   );
-};
+}
 
 export default Map;
