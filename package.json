@@ -17,6 +17,7 @@
     "geojson-vt": "^3.2.1",
     "leaflet": "^1.7.1",
     "leaflet-spin": "^1.1.2",
+    "leaflet.markercluster": "^1.5.3",
     "next": "^12.0.7",
     "postcss": "^8.4.5",
     "prop-types": "^15.8.1",
@@ -24,6 +25,7 @@
     "react-async": "^10.0.1",
     "react-dom": "^17.0.2",
     "react-leaflet": "^3.2.4",
+    "react-leaflet-markercluster": "^3.0.0-rc1",
     "spin.js": "^4.1.1",
     "tailwindcss": "^3.0.15",
     "typescript-language-server": "^0.9.4"
