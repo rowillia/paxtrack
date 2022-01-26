@@ -1,9 +1,13 @@
 import * as ReactLeaflet from "react-leaflet";
 import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { useEffect, useState } from "react";
 import { TileJSONMarkers } from "./geojson";
+import MarkerClusterGroup from "react-leaflet-markercluster";
+
 import type { LatLngExpression } from "leaflet";
+
+import "leaflet/dist/leaflet.css";
+import "react-leaflet-markercluster/dist/styles.min.css";
 
 const DEFAULT_CENTER: LatLngExpression = [38.907132, -77.036546];
 const DEFAULT_ZOOM = 15;
@@ -65,7 +69,9 @@ function Map({
     >
       <OSMBaseLayer />
       <LocationMarker />
-      <TileJSONMarkers url="/data/geojson_data.json" />
+      <MarkerClusterGroup>
+        <TileJSONMarkers url="/data/geojson_data.json" />
+      </MarkerClusterGroup>
       {children}
     </MapContainer>
   );
