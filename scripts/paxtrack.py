@@ -17,17 +17,6 @@ loader = jinja2.FileSystemLoader(searchpath="./templates")
 temoplate_env = jinja2.Environment(loader=loader)
 template = temoplate_env.get_template("data.html")
 
-def data_vectors_js(vectors: List[Dict[str,Any]]) -> str:
-    names:Set[str] = set()
-    for m in vectors:
-        names |= set(m.keys())
-
-    columns = defaultdict(list)
-    for m in vectors:
-        for n in names:
-            columns[n].append(m.get(n))
-    return '\n'.join(f"const vector_{n} = {json.dumps(v)};" for n,v in columns.items())
-    
 
 def data_vectors_js(vectors: List[Dict[str, Any]]) -> str:
     names: Set[str] = set()
@@ -133,7 +122,7 @@ async def write_data(locations: List[TheraputicLocations], dest: Path) -> None:
             geojson.FeatureCollection(list(geojson_features.values())), sort_keys=True
         )
     )
-    (dest / "data_vectors.js").write_text(data_vectors_js(vectors))
+    (dest / "data_vectors.json").write_text(data_vectors_js(vectors))
 
 
 async def main() -> None:
